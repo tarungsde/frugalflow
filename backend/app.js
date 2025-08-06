@@ -41,6 +41,17 @@ app.get("/", (req, res) => {
   res.json("hello from backend");
 });
 
+app.get("/auth/google", passport.authenticate("google", {
+  scope: ["profile", "email"],
+}));
+
+app.get("/auth/google/otunar", passport.authenticate("google", {
+    successRedirect: "http://localhost:5173/app", 
+    failureRedirect: "http://localhost:5173/login?error=Invalid credentials",
+  })
+);
+
+
 app.get("/logout", (req, res) => {
   req.logOut(err => {
     if (err) return next(err);
