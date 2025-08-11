@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "../axios";
 import { useNavigate } from "react-router-dom";
 
-const AppPage = () => {
+function AppPage() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -12,7 +12,7 @@ const AppPage = () => {
       .catch(() => navigate("/login"));
   }, []);
 
-  const handleLogout = async () => {
+  async function handleLogout() {
     await axios.get("/logout");
     navigate("/login");
   };

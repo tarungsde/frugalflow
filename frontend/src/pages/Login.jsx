@@ -3,33 +3,37 @@ import axios from '../axios';
 import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  async function handleLogin(e) {
     e.preventDefault();
     try {
-      const res = await axios.post('/login', { username, password });
-      alert('Login successful!');
-      navigate('/app'); // or your dashboard route
+      const res = await axios.post('/login', { email, password });
+      navigate("/"); // or your dashboard route
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
     }
   };
 
-  const handleGoogleLogin = () => {
+  function handleGoogleLogin() {
     window.location.href = 'http://localhost:3000/auth/google';
   };
 
+  function navigateToRegister() {
+    navigate("/register");
+  }
+
   return (
     <form onSubmit={handleLogin}>
-      <input type="text" placeholder="Username" value={username}
-        onChange={(e) => setUsername(e.target.value)} />
+      <input type="text" placeholder="Email" value={email}
+        onChange={(e) => setEmail(e.target.value)} />
       <input type="password" placeholder="Password" value={password}
         onChange={(e) => setPassword(e.target.value)} />
       <button type="submit">Login</button>
       <button type="button" onClick={handleGoogleLogin}>Login with Google</button>
+      <p>First time here? <button type="button" onClick={navigateToRegister}>Register!</button> </p>
     </form>
   );
 }

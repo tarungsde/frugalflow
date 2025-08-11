@@ -1,4 +1,6 @@
+import AppPage from "./pages/AppPage";
+
 function App() {
-  return <h1>Home Page</h1>;
+  return <div> <AppPage /> </div>
 }
 export default App;

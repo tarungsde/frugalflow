@@ -37,8 +37,9 @@ mongoose.connect("mongodb://127.0.0.1:27017/Otunar")
   .then(() => console.log("Connected to DB sucessfully"))
   .catch(err => console.log("Error while connecting to DB"));
 
+
 app.get("/", (req, res) => {
-  res.json("hello from backend");
+  res.json("Server is running.");
 });
 
 app.get("/auth/google", passport.authenticate("google", {
@@ -46,11 +47,10 @@ app.get("/auth/google", passport.authenticate("google", {
 }));
 
 app.get("/auth/google/otunar", passport.authenticate("google", {
-    successRedirect: "http://localhost:5173/app", 
+    successRedirect: "http://localhost:5173/", 
     failureRedirect: "http://localhost:5173/login?error=Invalid credentials",
   })
 );
-
 
 app.get("/logout", (req, res) => {
   req.logOut(err => {
