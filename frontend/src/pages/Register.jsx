@@ -17,10 +17,6 @@ function Register() {
     }
   };
 
-  function navigateToLogin() {
-    navigate("/login");
-  }
-
   return (
     <form onSubmit={handleRegister}>
       <input type="text" placeholder="email" value={email}
@@ -28,7 +24,7 @@ function Register() {
       <input type="password" placeholder="Password" value={password}
         onChange={(e) => setPassword(e.target.value)} />
       <button type="submit">Register</button>
-      <p>Already have an account? <button type="button" onClick={navigateToLogin}>Login!</button></p>
+      <p>Already have an account? <button type="button" onClick={() => navigate("/login")}>Login!</button></p>
     </form>
   );
 }

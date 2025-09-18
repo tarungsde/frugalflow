@@ -21,10 +21,6 @@ function Login() {
     window.location.href = 'http://localhost:3000/auth/google';
   };
 
-  function navigateToRegister() {
-    navigate("/register");
-  }
-
   return (
     <form onSubmit={handleLogin}>
       <input type="text" placeholder="Email" value={email}
@@ -33,7 +29,7 @@ function Login() {
         onChange={(e) => setPassword(e.target.value)} />
       <button type="submit">Login</button>
       <button type="button" onClick={handleGoogleLogin}>Login with Google</button>
-      <p>First time here? <button type="button" onClick={navigateToRegister}>Register!</button> </p>
+      <p>First time here? <button type="button" onClick={(e) => navigate("/register")}>Register!</button> </p>
     </form>
   );
 }
