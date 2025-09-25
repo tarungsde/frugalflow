@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import User from "./models/User.js"
+import Transaction from "./models/Transaction.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv"
 import cors from "cors";
@@ -33,10 +34,9 @@ app.use(cors({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://127.0.0.1:27017/Otunar")
-  .then(() => console.log("Connected to DB sucessfully"))
-  .catch(err => console.log("Error while connecting to DB"));
-
+mongoose.connect("mongodb://127.0.0.1:27017/FrugalFlow")
+  .then(() => console.log("Connected to DB successfully"))
+  .catch(err => console.error("Error while connecting to DB:", err));
 
 app.get("/", (req, res) => {
   res.json("Server is running.");
@@ -66,6 +66,25 @@ app.get("/me", (req, res) => {
   } else {
     res.status(401).json({ loggedIn: false });
   }
+});
+
+const ensureAuth = (req, res, next) => {
+  if (req.isAuthenticated()) return next();
+  res.status(401).json({ message: "Not authenticated" });
+};
+
+app.get("/all-transactions", ensureAuth, async (req, res) => {
+
+  try {
+    const allTransaction = await Transaction.find({userId: req.user._id});
+    console.log(allTransaction);
+    res.json(allTransaction);
+
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    res.status(500).json({ message: "Failed to fetch transactions" }); 
+  }
+
 });
 
 
@@ -112,6 +131,29 @@ app.post("/login", (req, res, next) => {
   })(req, res, next);
 });
 
+app.post("/add-transaction", ensureAuth, async (req, res) => {
+  try {
+    const { type, category, amount, date, description } = req.body;
+
+    const newTransaction = new Transaction({
+      type: type, 
+      category: category, 
+      amount: amount, 
+      date: date, 
+      description: description, 
+      userId: req.user._id
+    });
+
+    await newTransaction.save();
+
+    res.status(201).json({ message: "Transaction received" });
+
+  } catch (error) {
+    console.error("Error saving transaction:", err);
+    res.status(500).json({ message: "Failed to save transaction" });
+  }
+  
+});
 
 passport.use("local",
   new Strategy({ usernameField: "email" }, async function verify(email, password, cb) {
@@ -164,8 +206,19 @@ passport.use("google", new GoogleStrategy({
   }
 }));
 
-passport.serializeUser((user, cb) => cb(null, user));
-passport.deserializeUser((user, cb) => cb(null, user));
+passport.serializeUser((user, cb) => {
+  cb(null, user._id);
+});
+
+passport.deserializeUser(async (id, cb) => {
+  try {
+    const user = await User.findById(id);
+    cb(null, user);
+  } catch (err) {
+    cb(err);
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`App is running on http://localhost:${port}.`)

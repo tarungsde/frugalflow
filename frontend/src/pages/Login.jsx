@@ -11,7 +11,7 @@ function Login() {
     e.preventDefault();
     try {
       const res = await axios.post('/login', { email, password });
-      navigate("/"); // or your dashboard route
+      navigate("/"); 
     } catch (err) {
       alert(err.response?.data?.message || 'Login failed');
     }
