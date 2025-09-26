@@ -1,39 +1,44 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import axios from "../axios";
 import { useNavigate } from "react-router-dom";
 
-function AppPage() {
+const AppPage = forwardRef((props, ref) => {
   const [user, setUser] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    axios.get("/me")
-      .then(res => setUser(res.data.user))
-      .catch(() => navigate("/login"));
-  }, []);
-
-  async function handleLogout() {
-    await axios.get("/logout");
-    navigate("/login");
-  };
-
-  async function getUserTransactions() {
+  const fetchTransactions = async () => {
     try {
       const res = await axios.get("/all-transactions");
       setTransactions(res.data);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
+  };
+
+  useEffect(() => {
+    axios
+      .get("/me")
+      .then((res) => setUser(res.data.user))
+      .catch(() => navigate("/login"));
+
+    fetchTransactions();
+  }, [navigate]);
+
+  // expose refreshTransactions to parent via ref
+  useImperativeHandle(ref, () => ({
+    refreshTransactions: fetchTransactions,
+  }));
+
+  async function handleLogout() {
+    await axios.get("/logout");
+    navigate("/login");
   }
 
   return (
     <div>
-
       <h2>Welcome {user?.email}</h2>
       <button onClick={handleLogout}>Logout</button>
-
-      <button onClick={getUserTransactions}> TRANSACTIONS </button>
 
       {transactions.length > 0 && (
         <ul>
@@ -46,6 +51,6 @@ function AppPage() {
       )}
     </div>
   );
-};
+});
 
 export default AppPage;

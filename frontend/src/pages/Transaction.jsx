@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../axios";
 
-function Transaction({ handleNewTransaction }) {
+function Transaction(props) {
 
   const expenseCategories = ["Food & Dining", "Shopping", "Housing"];
   const incomeCategories = ["Salary", "Free Lance", "Investments"];
@@ -34,14 +34,16 @@ function Transaction({ handleNewTransaction }) {
       description,
     };
 
-    axios.post("/add-transaction", transactionData)
-      .then((res) => console.log(res)).catch((err) => console.error(err));
-    
+    await axios.post("/add-transaction", transactionData);   
+
     setTransactionAmount("");
     setTransactionType("expense");
     setCategory("");
     setDate(today.toISOString().split("T")[0]);
     setDescription("");
+
+    props.onSuccess();   
+    props.onClose();  
 
   };
   
@@ -55,7 +57,7 @@ function Transaction({ handleNewTransaction }) {
 
           <button 
             id="hide-transaction-card"
-            onClick={handleNewTransaction}
+            onClick={props.onClose}
           > 
             X 
           </button>

@@ -1,19 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import AppPage from "./AppPage";
 import Transaction from "./Transaction";
 
 function App() {
 
   const [newtransaction, setNewTransaction] = useState(false);
+  const appPageRef = useRef();
 
   const handleNewTransaction = (state) => {
     setNewTransaction(state);
   }
 
+  const refreshTransactions = () => {
+    if (appPageRef.current) {
+      appPageRef.current.refreshTransactions();
+    }
+  };
+
   return (
     <div id="container"> 
      
-      <AppPage /> 
+      <AppPage ref={appPageRef}/> 
 
       <button 
         id="show-transaction-card" 
@@ -22,7 +29,8 @@ function App() {
         New Transaction
       </button>
 
-      {newtransaction && ( <Transaction handleNewTransaction={() => handleNewTransaction(false)} /> )}
+      {newtransaction && ( <Transaction onClose={() => handleNewTransaction(false)}
+                                        onSuccess={refreshTransactions} /> )}
 
     </div>
   );
