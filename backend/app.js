@@ -9,13 +9,17 @@ import session from "express-session";
 import passport from "passport";
 import { Strategy } from "passport-local";
 import GoogleStrategy from "passport-google-oauth2";
-
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const app = express();
 const port = 3000;
 const saltRounds = 3;
 
 dotenv.config();
+
+const genAI = new GoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+console.log("Gemini Key:", process.env.GEMINI_API_KEY);
+
 
 app.use(express.json());
 
@@ -74,7 +78,6 @@ const ensureAuth = (req, res, next) => {
 };
 
 app.get("/all-transactions", ensureAuth, async (req, res) => {
-
   try {
     const allTransaction = await Transaction.find({userId: req.user._id});
     res.json(allTransaction);
@@ -83,11 +86,9 @@ app.get("/all-transactions", ensureAuth, async (req, res) => {
     console.error("Error fetching transactions:", error);
     res.status(500).json({ message: "Failed to fetch transactions" }); 
   }
-
 });
 
 app.get("/filter", ensureAuth, async (req, res) => {
-
   const { type, category} = req.query;
 
   try {
@@ -100,6 +101,47 @@ app.get("/filter", ensureAuth, async (req, res) => {
     res.json(filteredData);
   } catch (error) {
     console.log("Error before filtering : ", error);
+  }
+});
+
+app.get("/generate-report", ensureAuth, async (req, res) => {
+  try {
+    const month = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const transactions = await Transaction.find({userId: req.user._id, date: {$gte: month}});
+
+    const totalIncome = transactions
+      .filter(t => t.type === "income")
+      .reduce((a,b) => a + b.amount, 0);
+    
+    const totalExpense = transactions
+      .filter(t => t.type === "expense")
+      .reduce((a, b) => a + b.amount, 0);
+
+    const balance = totalIncome - totalExpense;
+
+    const summary = `
+      Income : ₹${totalIncome}
+      Expense : ₹${totalExpense}
+      Balance : ₹${balance}
+      Categories Breakdown: ${JSON.stringify(transactions.map(t => `${t.category}: ₹${t.amount}`))}
+    `;
+
+    const model = genAI.getGenerativeModel({ model : "gemini-1.5-flash"});
+
+    const prompt = `Here is a user's financial summary for this month:\n${summary}\n
+    Please generate a simple financial report with:
+    1. Spending overview
+    2. Clear money-saving and budgeting advice.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const reportText = result.response.text();
+
+    res.json({ report: reportText });
+    
+  } catch (error) {
+    console.error("Erros while generating report", error);
+    res.status(500).json({ message: "Failed to generate report" });
   }
 });
 

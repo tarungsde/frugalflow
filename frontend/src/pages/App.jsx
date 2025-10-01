@@ -14,6 +14,8 @@ function App() {
   const [editTransaction, setEditTransaction] = useState(null);
   const [filterType, setFilterType] = useState(null);
   const [filterCategory, setFilterCategory] = useState(null);
+  const [report, setReport] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
 
   const navigate = useNavigate();
 
@@ -76,6 +78,17 @@ function App() {
     return <option value={categoryName}>{categoryName}</option>
   }
 
+  const generateReport = async () => {
+    setLoadingReport(true);
+    try {
+      const res = await axios.get("/generate-report");
+      setReport(res.data.report);
+    } catch (error) {
+      console.error("Error while reaching backend for report generation. ", error);
+    }
+    setLoadingReport(false);
+  }
+
   const expenseCategories = ["Food & Dining", "Shopping", "Housing"];
   const incomeCategories = ["Salary", "Free Lance", "Investments"];
 
@@ -125,6 +138,17 @@ function App() {
           style={{ position: "absolute", top: 20, right: 20 }}
           >Logout
         </button>
+
+        <div>
+          <p>Monthly AI Report <button onClick={generateReport}>Generate Report </button> </p>
+          {loadingReport && <p>📊 Generating your report...</p>}
+          {report && (
+            <div className="report-card">
+              <h3>AI Financial Report</h3>
+              <pre>{report}</pre>
+            </div>
+          )}
+        </div>
 
         {transactions.length > 0 && (
           <div>
