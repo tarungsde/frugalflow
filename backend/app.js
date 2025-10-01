@@ -52,7 +52,7 @@ app.get("/auth/google/otunar", passport.authenticate("google", {
   })
 );
 
-app.get("/logout", (req, res) => {
+app.get("/logout", (req, res, next) => {
   req.logOut(err => {
     if (err) return next(err);
     res.clearCookie("connect.sid");
@@ -77,7 +77,6 @@ app.get("/all-transactions", ensureAuth, async (req, res) => {
 
   try {
     const allTransaction = await Transaction.find({userId: req.user._id});
-    console.log(allTransaction);
     res.json(allTransaction);
 
   } catch (error) {
@@ -85,6 +84,23 @@ app.get("/all-transactions", ensureAuth, async (req, res) => {
     res.status(500).json({ message: "Failed to fetch transactions" }); 
   }
 
+});
+
+app.get("/filter", ensureAuth, async (req, res) => {
+
+  const { type, category} = req.query;
+
+  try {
+    let filter = { userId : req.user._id};
+    if (type) {
+      filter.type = type;
+      if (category) filter.category = category;
+    }
+    const filteredData = await Transaction.find(filter);
+    res.json(filteredData);
+  } catch (error) {
+    console.log("Error before filtering : ", error);
+  }
 });
 
 
@@ -148,11 +164,44 @@ app.post("/add-transaction", ensureAuth, async (req, res) => {
 
     res.status(201).json({ message: "Transaction received" });
 
-  } catch (error) {
+  } catch (err) {
     console.error("Error saving transaction:", err);
     res.status(500).json({ message: "Failed to save transaction" });
   }
   
+});
+
+app.put("/update-transaction/:id", ensureAuth, async (req, res) => {
+  try {
+    const transactionId = req.params.id;
+    const { type, category, amount, description, date } = req.body;
+
+    const updated = await Transaction.findOneAndUpdate(
+      { _id: transactionId, userId: req.user._id },
+      { type, category, amount, description, date },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    res.status(200).json({ message: "Transaction updated successfully", updated });
+  } catch (error) {
+    console.error("Error updating transaction:", error);
+    res.status(500).json({ message: "Failed to update transaction" });
+  }
+});
+
+app.delete("/delete-transaction/:id", ensureAuth, async (req, res) => {
+  try {
+    const transactionId = req.params.id;
+    const deleted = await Transaction.deleteOne({ _id: transactionId, userId: req.user._id });
+    res.status(200).json({ message: "Transaction deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting transaction:", error);
+    res.status(500).json({ message: "Failed to delete transaction" });
+  }
 });
 
 passport.use("local",
@@ -198,7 +247,7 @@ passport.use("google", new GoogleStrategy({
         email : profile.email,
         password : "google",
       });
-      newUser.save();
+      await newUser.save();
       cb(null, newUser);
     }
   } catch (err) {

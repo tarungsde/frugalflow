@@ -1,40 +1,46 @@
 import React, { useState, useEffect } from "react";
 import axios from "../axios";
 
-function Transaction(props) {
+function Transaction({ onClose, onSuccess, existingData }) {
 
   const expenseCategories = ["Food & Dining", "Shopping", "Housing"];
   const incomeCategories = ["Salary", "Free Lance", "Investments"];
 
   const today = new Date();
 
-  const [transactionAmount, setTransactionAmount] = useState("");
-  const [transactionType, setTransactionType] = useState("expense");
-  const [category, setCategory] = useState("");
-  const [date, setDate] = useState(today.toISOString().split("T")[0]);
-  const [description, setDescription] = useState("");
+  const [transactionAmount, setTransactionAmount] = useState(existingData?.amount || "");
+  const [transactionType, setTransactionType] = useState(existingData?.type || "expense");
+  const [category, setCategory] = useState(existingData?.category || "");
+  const [description, setDescription] = useState(existingData?.description || "");
+  const [date, setDate] = useState(
+    existingData ? existingData.date.split("T")[0] : "" || today.toISOString().split("T")[0]);
 
   useEffect(() => {
     setCategory("");
   }, [transactionType]);
 
   const handleSubmit = async (e) => {
+    
+  e.preventDefault();
 
-    e.preventDefault();
-    if (!category) {
-      alert("Please select a category!");
-      return;
+  try {
+    if (existingData) {
+      await axios.put(`/update-transaction/${existingData._id}`, {
+        type: transactionType,
+        category,
+        amount: transactionAmount,
+        description,
+        date,
+      });
+    } else {
+      await axios.post("/add-transaction", {
+        type: transactionType,
+        category,
+        amount: transactionAmount,
+        description,
+        date,
+      });
     }
-
-    const transactionData = {
-      type: transactionType,
-      category,
-      amount: transactionAmount,
-      date,
-      description,
-    };
-
-    await axios.post("/add-transaction", transactionData);   
 
     setTransactionAmount("");
     setTransactionType("expense");
@@ -42,10 +48,12 @@ function Transaction(props) {
     setDate(today.toISOString().split("T")[0]);
     setDescription("");
 
-    props.onSuccess();   
-    props.onClose();  
+    onSuccess();
+    onClose();
 
-  };
+  } catch (error) {
+    console.error(error);
+  }};
   
   const handleDateChange = (e) => {
     setDate(e.target.value);
@@ -55,14 +63,14 @@ function Transaction(props) {
     <div>
       <form onSubmit={handleSubmit}>
 
-          <button 
-            id="hide-transaction-card"
-            onClick={props.onClose}
-          > 
-            X 
-          </button>
+        <button 
+          id="hide-transaction-card"
+          onClick={onClose}
+        > 
+          X 
+        </button>
 
-        <h1> Add New Transaction </h1>
+        <h1>{existingData ? "Edit Transaction" : "Add New Transaction"}</h1>
         <h3> Enter the details for your new income or expense. </h3>
 
         <label>Transaction Type</label>
