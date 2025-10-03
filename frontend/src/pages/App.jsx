@@ -16,6 +16,8 @@ function App() {
   const [filterCategory, setFilterCategory] = useState(null);
   const [report, setReport] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const navigate = useNavigate();
 
@@ -24,6 +26,9 @@ function App() {
       const params = {};
       if (filterDetails.type) params.type = filterDetails.type;
       if (filterDetails.category) params.category = filterDetails.category;
+      if (filterDetails.startDate) params.startDate = filterDetails.startDate;
+      if (filterDetails.endDate) params.endDate = filterDetails.endDate;
+
       const queryString = new URLSearchParams(filterDetails).toString();
       const url = queryString ? `/filter?${queryString}` : "/all-transactions";
       const res = await axios.get(url);
@@ -100,10 +105,6 @@ function App() {
   }, [navigate]);
 
   useEffect(() => {
-    fetchTransactions();
-  }, []);
-
-  useEffect(() => {
       let totalIncome = 0;
       let totalExpense = 0;
 
@@ -121,12 +122,16 @@ function App() {
   }, [transactions]);
 
   useEffect(() => {
-    fetchTransactions({ type: filterType, category: filterCategory });
-  }, [filterType, filterCategory]);
+    fetchTransactions({ type: filterType, category: filterCategory, startDate, endDate });
+  }, [filterType, filterCategory, startDate, endDate]);
 
   useEffect(() => {
     setFilterCategory("");
   }, [filterType]);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
 
   return (
     <div id="container"> 
@@ -162,11 +167,30 @@ function App() {
                 <option value="income">income</option>
                 <option value="expense">expense</option>
               </select>
-              <select name="category" id="category" value={filterCategory || ""} onChange={(e) => setFilterCategory(e.target.value)}>
+              <select 
+                name="category" 
+                id="category" 
+                value={filterCategory || ""} 
+                onChange={(e) => setFilterCategory(e.target.value)}
+                disabled={!filterType}>
                 <option value="">All Category</option>
                 {filterType==="income" ? incomeCategories.map(optionMapping) : expenseCategories.map(optionMapping)}
               </select>
+              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
             </div>
+
+            {(filterType || filterCategory || startDate || endDate) && (
+              <button onClick={() => {
+                setFilterType("");
+                setFilterCategory("");
+                setStartDate("");
+                setEndDate("");
+              }}>
+                Clear Filters
+              </button>
+            )}
+
             <p> Type - Details - Date - Amount </p>
             
             <div>

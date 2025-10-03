@@ -17,9 +17,7 @@ const saltRounds = 3;
 
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-console.log("Gemini Key:", process.env.GEMINI_API_KEY);
-
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.use(express.json());
 
@@ -89,15 +87,26 @@ app.get("/all-transactions", ensureAuth, async (req, res) => {
 });
 
 app.get("/filter", ensureAuth, async (req, res) => {
-  const { type, category} = req.query;
+  const { type, category, startDate, endDate} = req.query;
 
   try {
     let filter = { userId : req.user._id};
+
     if (type) {
       filter.type = type;
       if (category) filter.category = category;
     }
-    const filteredData = await Transaction.find(filter);
+
+    if (startDate || endDate) {
+      filter.date = {};
+      if (startDate) filter.date.$gte = new Date(startDate);
+      if (endDate) {
+        let end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.date.$lte = end;
+      } 
+    }
+    const filteredData = await Transaction.find(filter).sort({ date: -1 });
     res.json(filteredData);
   } catch (error) {
     console.log("Error before filtering : ", error);
@@ -126,14 +135,17 @@ app.get("/generate-report", ensureAuth, async (req, res) => {
       Categories Breakdown: ${JSON.stringify(transactions.map(t => `${t.category}: ₹${t.amount}`))}
     `;
 
-    const model = genAI.getGenerativeModel({ model : "gemini-1.5-flash"});
-
     const prompt = `Here is a user's financial summary for this month:\n${summary}\n
     Please generate a simple financial report with:
     1. Spending overview
     2. Clear money-saving and budgeting advice.
+    3. Number of words should be less than 200.
+    4. Tone should be friendly and encouraging.
+    Format the report in short paragraphs with headings.
+    Provide the report in plain text without any markdown formatting.
     `;
 
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     const reportText = result.response.text();
 
@@ -141,7 +153,7 @@ app.get("/generate-report", ensureAuth, async (req, res) => {
     
   } catch (error) {
     console.error("Erros while generating report", error);
-    res.status(500).json({ message: "Failed to generate report" });
+    res.status(500).json({ report: "Failed to generate report due to server error." });
   }
 });
 
@@ -251,7 +263,6 @@ passport.use("local",
 
     try {
       const existingUser = await User.findOne({email});
-
       if (!existingUser) {
         console.log("Account does not exist.");
         return cb(null, false, { message: "Account does not exist" });

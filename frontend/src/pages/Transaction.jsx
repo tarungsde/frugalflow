@@ -137,7 +137,7 @@ function Transaction({ onClose, onSuccess, existingData }) {
           placeholder="e.g. Groceries from D-mart"
         />
 
-        <button type="submit">Add Transaction</button>
+        <button type="submit"> { existingData ? "Edit Transaction " : " Add Transaction" }</button>
 
       </form>
     </div>
