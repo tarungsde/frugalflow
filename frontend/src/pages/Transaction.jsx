@@ -60,88 +60,117 @@ function Transaction({ onClose, onSuccess, existingData }) {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
+    <div
+      className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 backdrop-blur-sm ${
+        onClose ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+    >
+      <div
+        className={`w-full max-w-md bg-white shadow-2xl h-full transform transition-transform duration-500 ease-in-out 
+          ${onClose ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-6 h-full overflow-y-auto">
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 self-end text-xl"
+          >
+            ✕
+          </button>
 
-        <button 
-          id="hide-transaction-card"
-          onClick={onClose}
-        > 
-          X 
-        </button>
+          <h1 className="text-xl font-semibold text-gray-800">
+            {existingData ? "Edit Transaction" : "Add New Transaction"}
+          </h1>
+          <h3 className="text-gray-500 text-sm mb-4">
+            Enter the details for your new income or expense.
+          </h3>
 
-        <h1>{existingData ? "Edit Transaction" : "Add New Transaction"}</h1>
-        <h3> Enter the details for your new income or expense. </h3>
+          {/* Transaction Type */}
+          <label className="font-medium text-gray-700">Transaction Type</label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                id="expense"
+                value="expense"
+                checked={transactionType === "expense"}
+                onChange={(e) => setTransactionType(e.target.value)}
+              />
+              <span>Expense</span>
+            </label>
 
-        <label>Transaction Type</label>
-        <input 
-          type="radio" 
-          id="expense" 
-          value="expense" 
-          checked = {transactionType === "expense"}
-          onChange = {(e) => setTransactionType(e.target.value)} 
-        />
-        <label htmlFor="expense">Expense</label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                id="income"
+                value="income"
+                checked={transactionType === "income"}
+                onChange={(e) => setTransactionType(e.target.value)}
+              />
+              <span>Income</span>
+            </label>
+          </div>
 
-        <input 
-          type="radio" 
-          id="income" 
-          value="income"
-          checked = {transactionType === "income"}
-          onChange = {(e) => setTransactionType(e.target.value)}
-        />
-        <label htmlFor="income">Income</label>
+          {/* Amount */}
+          <label htmlFor="transactionAmount" className="font-medium text-gray-700">Amount</label>
+          <input
+            type="number"
+            id="transactionAmount"
+            value={transactionAmount}
+            onChange={(e) => setTransactionAmount(e.target.value)}
+            placeholder="Enter amount"
+            className="border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+            required
+          />
 
-        <label htmlFor="transactionAmount"> Amount </label>
-        <input 
-          type="number"
-          id="transactionAmount"
-          value={transactionAmount}
-          onChange={(e) => setTransactionAmount(e.target.value)}
-          placeholder="Enter amount"
-          required
-        />
+          {/* Category */}
+          <label htmlFor="category" className="font-medium text-gray-700">Category</label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+          >
+            <option value="" disabled>Select a category</option>
+            {(transactionType === "expense" ? expenseCategories : incomeCategories).map((cat, index) => (
+              <option key={index} value={cat}>{cat}</option>
+            ))}
+          </select>
 
-        <label htmlFor="category"> Category </label>
-        <select 
-          id="category" 
-          value={category} 
-          onChange={(e) => setCategory(e.target.value)}
-        >
-          <option value="" disabled>
-            Select a category
-          </option>
-          {(transactionType === "expense" ? expenseCategories : incomeCategories).map((cat, index) => (
-            <option key={index} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+          {/* Date */}
+          <label htmlFor="mydate" className="font-medium text-gray-700">Date</label>
+          <input
+            type="date"
+            id="mydate"
+            value={date}
+            max={today.toISOString().split("T")[0]}
+            onChange={handleDateChange}
+            className="border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+          />
 
+          {/* Description */}
+          <label htmlFor="description" className="font-medium text-gray-700">Description</label>
+          <input
+            type="text"
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="e.g. Groceries from D-mart"
+            className="border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-purple-400 focus:outline-none"
+          />
 
-        <label htmlFor="mydate"> Date </label>
-        <input
-          type="date"
-          id="mydate"
-          value={date}
-          max={today.toISOString().split("T")[0]}
-          onChange={handleDateChange}
-        />
-
-        <label htmlFor="description"> Description </label>
-        <input
-          type="text"
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g. Groceries from D-mart"
-        />
-
-        <button type="submit"> { existingData ? "Edit Transaction " : " Add Transaction" }</button>
-
-      </form>
+          {/* Submit button */}
+          <button
+            type="submit"
+            className="bg-purple-500 text-white py-2 rounded-md mt-4 hover:bg-purple-600 transition duration-200"
+          >
+            {existingData ? "Save Changes" : "Add Transaction"}
+          </button>
+        </form>
+      </div>
     </div>
-  )
+  );
 }
 
 export default Transaction;

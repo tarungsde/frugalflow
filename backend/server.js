@@ -137,12 +137,13 @@ app.get("/generate-report", ensureAuth, async (req, res) => {
 
     const prompt = `Here is a user's financial summary for this month:\n${summary}\n
     Please generate a simple financial report with:
-    1. Spending overview
-    2. Clear money-saving and budgeting advice.
-    3. Number of words should be less than 200.
+    1. Summary of income and expenses.
+    2. Advice on savings and budgeting.
+    3. Summary and advice should contain around 70 words each in a paragraph.
     4. Tone should be friendly and encouraging.
-    Format the report in short paragraphs with headings.
-    Provide the report in plain text without any markdown formatting.
+    5. Provide the report in plain text without any markdown formatting.
+    6. Only contain 2 paragraphs in total.
+    7. Inbetween the 2 paragraphs, add a || symbbol.
     `;
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });

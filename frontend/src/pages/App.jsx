@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../axios";
 import Transaction from "./Transaction";
 import { useNavigate } from "react-router-dom";
@@ -14,10 +14,11 @@ function App() {
   const [editTransaction, setEditTransaction] = useState(null);
   const [filterType, setFilterType] = useState(null);
   const [filterCategory, setFilterCategory] = useState(null);
-  const [report, setReport] = useState(null);
+  const [report, setReport] = useState({summary: "", advice: ""});
   const [loadingReport, setLoadingReport] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -45,7 +46,7 @@ function App() {
    
   const getCategoryIcon = (category) => {
     switch (category.toLowerCase()) {
-      case 'freelance':
+      case 'free lance':
         return '💻';
       case 'entertainment':
         return '🎟️';
@@ -73,6 +74,21 @@ function App() {
       document.removeEventListener('click', handleClickOutside);
     };
   }, []);
+
+  // useEffect(() => {
+  //   const handleClickOutside = (event) => {
+  //     if (!event.target.className('.transaction-card')) {
+  //       setEditTransaction(null);
+  //       setNewTransaction(false);
+  //     }
+  //   };
+
+  //   document.addEventListener('click', handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener('click', handleClickOutside);
+  //   };
+  // }, []);
+
 
   const mappingFunction = (tx) => {
     const isIncome = tx.type === "income";
@@ -149,30 +165,6 @@ function App() {
       </div>
     );
   };
-
-
-
-  // const mappingFunction = (tx) => {
-  //   return (
-  //       <tr key={tx._id} className="bg-white hover:bg-gray-50 border-b border-gray-200 relative">
-  //         <td>{tx.type === "income" ? "Income" : "Expense"}</td>
-  //         <td>{tx.category} {tx.description ? " - " + tx.description : null}</td>
-  //         <td>{new Date(tx.date).toISOString().split("T")[0]}</td>
-  //         <td>₹{tx.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-  //         <td>
-  //           <button onClick={() => setOptionsVisible(optionsVisible === tx._id ? null : tx._id) }>
-  //             ⋯
-  //           </button>
-  //         </td>
-  //         {optionsVisible === tx._id && (
-  //         <div className="options-menu">
-  //           <button onClick={() => handleEdit(tx)}>Edit</button>
-  //           <button onClick={() => handleDelete(tx._id)}>Delete</button>
-  //         </div>
-  //         )}
-  //       </tr>
-  //   )
-  // }
   
   const handleDelete = async (id) => {
     try {
@@ -198,7 +190,12 @@ function App() {
     setLoadingReport(true);
     try {
       const res = await axios.get("/generate-report");
-      setReport(res.data.report);
+      const formattedReport = {
+        summary: res.data.report.split('||')[0].trim(),
+        advice: res.data.report.split('||')[1].trim()
+      };
+      setReport(formattedReport);
+      setShowModal(true);
     } catch (error) {
       console.error("Error while reaching backend for report generation. ", error);
     }
@@ -306,16 +303,41 @@ function App() {
           </div>
         </div>
 
+        {loadingReport && (
+          <p className="text-sm text-gray-500 mt-2 mx-30">Generating your report...</p>
+        )}
 
-        <div>
-          {loadingReport && <p>📊 Generating your report...</p>}
-          {report && (
-            <div className="report-card">
-              <h3>AI Financial Report</h3>
-              <pre>{report}</pre>
+        {showModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg p-6 relative animate-fadeIn">
+              {/* Close Button */}
+              <button
+                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-lg"
+                onClick={() => setShowModal(false)}
+              >
+                ✕
+              </button>
+
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-4">
+                <i className="ri-robot-line text-purple-600 text-xl"></i>
+                <h1 className="text-lg font-semibold text-gray-800">AI Financial Report</h1>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                Summary and advice for the current month based on your transactions.
+              </p>
+
+              {/* Summary */}
+              <h2 className="text-md font-semibold text-gray-800 mb-2">Summary</h2>
+              <p className="text-gray-600 text-sm mb-4">{report.summary}</p>
+
+              {/* Advice */}
+              <h2 className="text-md font-semibold text-gray-800 mb-2">Advice</h2>
+              <p className="text-gray-600 text-sm whitespace-pre-line">{report.advice}</p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
 
         
         <div className="flex justify-between mx-30 my-6">
@@ -417,16 +439,20 @@ function App() {
 
       </div>
 
-      {newtransaction && ( 
-        <Transaction 
+      {newtransaction && (
+        <Transaction className="transaction-card"
           onClose={() => {
-            setNewTransaction(false);
-            setEditTransaction(null);
-          }} 
-          onSuccess={fetchTransactions} 
+            // Small delay to allow slide-out animation
+            setTimeout(() => {
+              setNewTransaction(false);
+              setEditTransaction(null);
+            }, 300);
+          }}
+          onSuccess={fetchTransactions}
           existingData={editTransaction}
-        /> 
+        />
       )}
+
 
     </div>
   );
