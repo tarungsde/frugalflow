@@ -36,7 +36,7 @@ app.use(cors({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb://127.0.0.1:27017/FrugalFlow")
+mongoose.connect("mongodb+srv://yadavatarun18_db_user:KYLGDPTcsoW9jE5O@frugalflow.vzqgmpe.mongodb.net/?retryWrites=true&w=majority&appName=frugalflow")
   .then(() => console.log("Connected to DB successfully"))
   .catch(err => console.error("Error while connecting to DB:", err));
 
