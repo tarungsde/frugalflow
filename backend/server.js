@@ -11,11 +11,11 @@ import { Strategy } from "passport-local";
 import GoogleStrategy from "passport-google-oauth2";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const app = express();
-const port = 3000;
-const saltRounds = 3;
-
 dotenv.config();
+
+const app = express();
+const port = process.env.PORT;
+const saltRounds = process.env.SALT_ROUNDS;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
