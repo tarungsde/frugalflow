@@ -29,7 +29,7 @@ app.use(session({
 }));
 
 app.use(cors({
-  origin: "http://localhost:5173", 
+  origin: process.env.APPLICATION_URL, 
   credentials: true,
 }));
 
@@ -49,8 +49,8 @@ app.get("/auth/google", passport.authenticate("google", {
 }));
 
 app.get("/auth/google/otunar", passport.authenticate("google", {
-    successRedirect: "http://localhost:5173/", 
-    failureRedirect: "http://localhost:5173/login?error=Invalid credentials",
+    successRedirect: process.env.APPLICATION_URL, 
+    failureRedirect: process.env.APPLICATION_URL + "/login?error=Invalid credentials",
   })
 );
 
